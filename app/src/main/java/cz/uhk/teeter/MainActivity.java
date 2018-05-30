@@ -82,6 +82,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         velocity[0] = (velocity[0] * 0.95f) + (gravity[0] * time);
         velocity[1] = (velocity[1] * 0.95f) + (gravity[1] * time);
 
+        
+
         lastMillis = nowMillis;
 
         //System.out.println(String.format("%s %s", velocity[0], velocity[1]));
