@@ -78,11 +78,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         float time = (float) (nowMillis - lastMillis) / 1000f;
 
-        //             zpomalování třením
+        //              zpomalování třením
         velocity[0] = (velocity[0] * 0.95f) + (gravity[0] * time);
         velocity[1] = (velocity[1] * 0.95f) + (gravity[1] * time);
-
-        
 
         lastMillis = nowMillis;
 
@@ -94,6 +92,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             textView.setX((int) position[0]);
             textView.setY((int) position[1]);
 
+            // při odrazu otáčíme vektor - todo dořešit kolize totálně - nejen takhle
             if (position[0] < 0 || position[0] > 600) velocity[0] *= -1f;
             if (position[1] < 0 || position[1] > 1200) velocity[1] *= -1f;
             System.out.println(String.format("%s %s", position[0], position[1]));
