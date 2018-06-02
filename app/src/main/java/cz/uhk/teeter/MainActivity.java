@@ -12,6 +12,12 @@ import android.view.View;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
+    public static class Sphere {
+        public int circleWidth, circleHeight;
+        public float[] position;
+        public float[] velocity = new float[]{0f, 0f}; //pro x (levá, pravá) a y(horní dolní) // obrázek os zde - https://developer.android.com/reference/android/hardware/SensorEvent
+    }
+
     private SensorManager sensorManager;
     private final static float alpha = 0.8f;
     private float[] gravity = new float[]{0f, 0f, 0f};
@@ -19,20 +25,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private int sensor = Sensor.TYPE_ACCELEROMETER; //TYPE_GRAVITY;// - by se hodila no
 
-    private float[] velocity = new float[]{0f, 0f}; //pro x (levá, pravá) a y(horní dolní) // obrázek os zde - https://developer.android.com/reference/android/hardware/SensorEvent
 
     private long lastMillis;
     private View circle;
-    private float[] position;
     private float width, height;
-    private int density, circleWidth, circleHeight;
+    private int density;
     private boolean init;
 
     private final float GRAVITY = 9.8f;
-    private float TŘENÍ = 0.95f;
-    private float INDEX_NOVE_RYCHLOSTI = 1.00f; //zatim necháme naplno
-    private final float ODRAZ = 0.99f;
-    private final float NOISE = 0.25f;
+    private float FRICTION = 0.95f;
+    private float SLOWDOWN_INDEX = 0.50f; //hodnota 0,5 zajistí pomalejší nelineární rozjezd a také pomalejší útlum <3
+    public static final float REFLECTION = 0.99f;
+    private final float NOISE = 0.35f;
+
+    private Sphere sphere = new Sphere();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,21 +49,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         circle = findViewById(R.id.circle);
 
-
         circle.post(new Runnable() {
             @Override
             public void run() {
                 DisplayMetrics metrics = getResources().getDisplayMetrics();
                 density = metrics.densityDpi;
-                circleWidth = circle.getWidth();
-                circleHeight = circle.getHeight();
-                width = ((ConstraintLayout) circle.getParent()).getWidth() - circleWidth;
-                height = ((ConstraintLayout) circle.getParent()).getHeight() - circleHeight;
+                sphere.circleWidth = circle.getWidth();
+                sphere.circleHeight = circle.getHeight();
+                width = ((ConstraintLayout) circle.getParent()).getWidth() - sphere.circleWidth;
+                height = ((ConstraintLayout) circle.getParent()).getHeight() - sphere.circleHeight;
                 width = pixelsToMeters((int) width);
                 height = pixelsToMeters((int) height);
                 circle.setX(width / 2);
                 circle.setY(height / 2);
-                position = new float[]{circle.getX(), circle.getY()};
+                sphere.position = new float[]{circle.getX(), circle.getY()};
                 init = true;
             }
         });
@@ -107,18 +112,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float deltaTime = (float) (nowMillis - lastMillis) / 1000f;
 
         //              zpomalování třením
-        float newVelocityX = (gravity[0] * deltaTime) * INDEX_NOVE_RYCHLOSTI;
-        float newVelocityY = (gravity[1] * deltaTime) * INDEX_NOVE_RYCHLOSTI;
+        float newVelocityX = (gravity[0] * deltaTime) * SLOWDOWN_INDEX;
+        float newVelocityY = (gravity[1] * deltaTime) * SLOWDOWN_INDEX;
 
-        float NYNĚJŠÍ_TŘENÍ;
+        float nowFriction;
+        //při nulové pozici chceme vyšší tření
         if (gravity[0] > -NOISE && gravity[0] < NOISE && gravity[1] > -NOISE && gravity[1] < NOISE) {
-            NYNĚJŠÍ_TŘENÍ = 0.97f;
+            nowFriction = 0.97f;
         } else {
-            NYNĚJŠÍ_TŘENÍ = TŘENÍ;
+            nowFriction = FRICTION;
         }
 
-        velocity[0] = (velocity[0] * NYNĚJŠÍ_TŘENÍ) + (newVelocityX);
-        velocity[1] = (velocity[1] * NYNĚJŠÍ_TŘENÍ) + (newVelocityY);
+        sphere.velocity[0] = (sphere.velocity[0] * nowFriction) + (newVelocityX);
+        sphere.velocity[1] = (sphere.velocity[1] * nowFriction) + (newVelocityY);
 
         //TODO - detekci hodu s telefonem - aby to nerozhodilo kuličku
 
@@ -127,29 +133,29 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         //System.out.println(String.format("%s %s", velocity[0], velocity[1]));
 
         if (init) {
-            if (position[0] >= 0 && position[0] <= (width)) {
-                position[0] -= (velocity[0] * deltaTime);
+            if (sphere.position[0] >= 0 && sphere.position[0] <= (width)) {
+                sphere.position[0] -= (sphere.velocity[0] * deltaTime);
             }
-            if (position[1] >= 0 && position[1] <= (height)) {
-                position[1] += (velocity[1] * deltaTime);
+            if (sphere.position[1] >= 0 && sphere.position[1] <= (height)) {
+                sphere.position[1] += (sphere.velocity[1] * deltaTime);
             }
-            circle.setX(metersToPixels(position[0]));
-            circle.setY(metersToPixels(position[1]));
+            circle.setX(metersToPixels(sphere.position[0]));
+            circle.setY(metersToPixels(sphere.position[1]));
 
-            //border světa
-            if (position[0] < 0) {
-                position[0] = 0;
-                velocity[0] *= -ODRAZ;
-            } else if (position[0] > (width)) {
-                position[0] = (width);
-                velocity[0] *= -ODRAZ;
+            //border světa - detekce kolize
+            if (sphere.position[0] < 0) {
+                sphere.position[0] = 0;
+                sphere.velocity[0] *= -REFLECTION;
+            } else if (sphere.position[0] > (width)) {
+                sphere.position[0] = (width);
+                sphere.velocity[0] *= -REFLECTION;
             }
-            if (position[1] < 0) {
-                position[1] = 0;
-                velocity[1] *= -ODRAZ;
-            } else if (position[1] > (height)) {
-                position[1] = (height);
-                velocity[1] *= -ODRAZ;
+            if (sphere.position[1] < 0) {
+                sphere.position[1] = 0;
+                sphere.velocity[1] *= -REFLECTION;
+            } else if (sphere.position[1] > (height)) {
+                sphere.position[1] = (height);
+                sphere.velocity[1] *= -REFLECTION;
             }
 
             //System.out.println(String.format("%s %s", position[0], position[1]));
