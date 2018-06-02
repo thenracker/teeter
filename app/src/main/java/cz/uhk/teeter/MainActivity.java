@@ -40,6 +40,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private Sphere sphere = new Sphere();
 
+    /**
+     * TODO co je potřeba udělat:
+     *
+     * - obstacle dodělat na kolize se stranami - myslet na to, že v rozích bychom měli počítat spíše s poloměrem kuličky
+     * - různé tvar překážek?
+     * - ukládání, načítání překážek
+     * - ukládání herního postupu
+     * - dynamické prostředí: scrollview ve kterém bude dlouhý level - dle pozice kuličky vhodně skrolovat layoutem
+     * -- na mravenčím displeji si totiž moc nezahrajeme :(
+     * - dodělat dírky do kterých se dá spadnout
+     * - dodělat nakloněné roviny - gradient stínový kde bude gravitace násobena indexem - ez
+     * - něco tě napadá KUBO ještě?
+     *
+     */
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
