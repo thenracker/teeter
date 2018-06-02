@@ -5,7 +5,9 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.view.View;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -20,8 +22,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float[] velocity = new float[]{0f, 0f}; //pro x (levá, pravá) a y(horní dolní) // obrázek os zde - https://developer.android.com/reference/android/hardware/SensorEvent
 
     private long lastMillis;
-    private View textView;
+    private View circle;
     private float[] position;
+    private float width, height;
+    private int density, circleWidth, circleHeight;
     private boolean init;
 
     @Override
@@ -31,12 +35,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
 
-        textView = findViewById(R.id.textView);
+        circle = findViewById(R.id.circle);
 
-        textView.post(new Runnable() {
+
+        circle.post(new Runnable() {
             @Override
             public void run() {
-                position = new float[]{textView.getX(), textView.getY()};
+                DisplayMetrics metrics = getResources().getDisplayMetrics();
+                density = metrics.densityDpi;
+                position = new float[]{circle.getX(), circle.getY()};
+                circleWidth = circle.getWidth();
+                circleHeight = circle.getHeight();
+                width = ((ConstraintLayout) circle.getParent()).getWidth() - circleWidth;
+                height = ((ConstraintLayout) circle.getParent()).getHeight() - circleHeight;
+                width = pixelsToMeters((int) width);
+                height = pixelsToMeters((int) height);
                 init = true;
             }
         });
@@ -78,24 +91,40 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         float time = (float) (nowMillis - lastMillis) / 1000f;
 
-        //              zpomalování třením
-        velocity[0] = (velocity[0] * 0.95f) + (gravity[0] * time);
-        velocity[1] = (velocity[1] * 0.95f) + (gravity[1] * time);
+        //              zpomalování třením ?? - je potřeba?? .. chtělo by to zpomalovat jen když je gravitace 0
+        velocity[0] = (velocity[0] * 0.99f) + (gravity[0] * time);
+        velocity[1] = (velocity[1] * 0.99f) + (gravity[1] * time);
 
         lastMillis = nowMillis;
 
         //System.out.println(String.format("%s %s", velocity[0], velocity[1]));
 
         if (init) {
-            position[0] -= (velocity[0] * time * 10000); //todo přepočet z metru na displej
-            position[1] += (velocity[1] * time * 10000);
-            textView.setX((int) position[0]);
-            textView.setY((int) position[1]);
+            if (position[0] >= 0 && position[0] <= (width)) {
+                position[0] -= (velocity[0] * time);
+            }
+            if (position[1] >= 0 && position[1] <= (height)) {
+                position[1] += (velocity[1] * time);
+            }
+            circle.setX(metersToPixels(position[0]));
+            circle.setY(metersToPixels(position[1]));
 
             // při odrazu otáčíme vektor - todo dořešit kolize totálně - nejen takhle
-            if (position[0] < 0 || position[0] > 600) velocity[0] *= -1f;
-            if (position[1] < 0 || position[1] > 1200) velocity[1] *= -1f;
-            System.out.println(String.format("%s %s", position[0], position[1]));
+            if (position[0] < 0) {
+                position[0] = 0;
+                velocity[0] *= -0.9f;
+            } else if (position[0] > (width)) {
+                position[0] = (width);
+                velocity[0] *= -0.9f;
+            }
+            if (position[1] < 0) {
+                position[1] = 0;
+                velocity[1] *= -0.9f;
+            } else if (position[1] > (height)) {
+                position[1] = (height);
+                velocity[1] *= -0.9f;
+            }
+            //System.out.println(String.format("%s %s", position[0], position[1]));
         }
 
     }
@@ -108,5 +137,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return (f < 0.5f && f > -0.5f) ? 0 : f;
     }
 
-    //TODO sepsat funkci pro zpomalování kuličky třením
+    private float pixelsToMeters(int pixelsCount) {
+        return ((float) pixelsCount / (float) density / 39f);
+    }
+
+    private int metersToPixels(float metersCount) {
+        return (int) (metersCount * 39f * (float) density);
+    }
+
 }
+
