@@ -42,7 +42,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     /**
      * TODO co je potřeba udělat:
-     *
      * - obstacle dodělat na kolize se stranami - myslet na to, že v rozích bychom měli počítat spíše s poloměrem kuličky
      * - různé tvar překážek?
      * - ukládání, načítání překážek
@@ -52,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
      * - dodělat dírky do kterých se dá spadnout
      * - dodělat nakloněné roviny - gradient stínový kde bude gravitace násobena indexem - ez
      * - něco tě napadá KUBO ještě?
-     *
      */
 
     @Override
@@ -117,7 +115,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         linearAcceleration[2] = clearValues[2] - gravity[2];
 
         //normalizace gravitace
-        float sum = gravity[0] + gravity[1] + gravity[2];
+        float sum = Math.abs(gravity[0]) + Math.abs(gravity[1]) + Math.abs(gravity[2]);
         gravity[0] = (gravity[0] / sum * GRAVITY);
         gravity[1] = (gravity[1] / sum * GRAVITY);
         gravity[2] = (gravity[2] / sum * GRAVITY);
@@ -138,6 +136,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             nowFriction = FRICTION;
         }
 
+        //TODO - velocity[0] do záporu roste rychleji
+
         sphere.velocity[0] = (sphere.velocity[0] * nowFriction) + (newVelocityX);
         sphere.velocity[1] = (sphere.velocity[1] * nowFriction) + (newVelocityY);
 
@@ -145,7 +145,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         lastMillis = nowMillis;
 
-        //System.out.println(String.format("%s %s", velocity[0], velocity[1]));
+//        if (sphere.velocity[0] > maxMax) maxMax = sphere.velocity[0];
+//        if (sphere.velocity[0] < maxMin) maxMin = sphere.velocity[0];
+
+        //System.out.println(String.format("%s %s", maxMax, maxMin));
 
         if (init) {
             if (sphere.position[0] >= 0 && sphere.position[0] <= (width)) {
@@ -173,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 sphere.velocity[1] *= -REFLECTION;
             }
 
-            //System.out.println(String.format("%s %s", position[0], position[1]));
+            //System.out.println(String.format("%s %s", /*sphere.velocity[0]*/" - ", sphere.velocity[1]));
         }
 
     }
