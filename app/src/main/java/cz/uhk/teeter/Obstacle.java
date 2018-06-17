@@ -1,21 +1,61 @@
 package cz.uhk.teeter;
 
+import java.util.Random;
+
 import static cz.uhk.teeter.MainActivity.REFLECTION;
 
 public class Obstacle {
 
     private int x, y, width, height;
+    private MainActivity mainActivity;
 
-    private void handleCollision(MainActivity.Sphere sphere){
+    public Obstacle(float width, float height, MainActivity mainActivity) {
+        this.width = 50;
+        this.height = 50; //pixelů zatím
+
+        this.x = new Random().nextInt((int) width - 20) + 20;
+        this.y = new Random().nextInt((int) height - 20) + 20;
+
+        this.mainActivity = mainActivity;
+    }
+
+
+    public void handleCollision(MainActivity.Sphere sphere) {
+
+        float [] position = new float[]{mainActivity.metersToPixels(sphere.position[0]), mainActivity.metersToPixels(sphere.position[0])};
 
         // kolize pravá strana
-        if (sphere.position[0] >= (x - sphere.circleWidth)
-                && sphere.position[1] > y - sphere.circleHeight
-                && sphere.position[1] < y + height){
-            sphere.position[0] = x - sphere.circleWidth;
+        if (position[0] >= (x - sphere.circleWidth)
+                && position[1] > y - sphere.circleHeight
+                && position[1] < y + height) {
+            position[0] = x - sphere.circleWidth;
+            sphere.velocity[0] *= -REFLECTION;
+        }
+
+        // kolize levá strana
+        if (position[0] <= (x + sphere.circleWidth)
+                && position[1] > y - sphere.circleHeight
+                && position[1] < y + height) {
+            position[0] = x + sphere.circleWidth;
             sphere.velocity[0] *= -REFLECTION;
         }
 
         //TODO zbytek stran
+    }
+
+    public int getX() {
+        return x;
+    }
+
+    public int getY() {
+        return y;
+    }
+
+    public int getWidth() {
+        return width;
+    }
+
+    public int getHeight() {
+        return height;
     }
 }

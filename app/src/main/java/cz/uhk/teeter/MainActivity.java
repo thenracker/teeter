@@ -1,21 +1,30 @@
 package cz.uhk.teeter;
 
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Bundle;
-import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
 import android.view.Display;
 import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.FrameLayout;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
     private int orientation;
+    private ArrayList<Obstacle> obstacles;
 
     public static class Sphere {
         public int circleWidth, circleHeight;
@@ -45,6 +54,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
     private Sphere sphere = new Sphere();
 
+    //private SurfaceView surfaceView;
+
     /**
      * TODO co je potřeba udělat:
      * - obstacle dodělat na kolize se stranami - myslet na to, že v rozích bychom měli počítat spíše s poloměrem kuličky
@@ -67,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         circle = findViewById(R.id.circle);
 
+        obstacles = new ArrayList<>();
+
         circle.post(new Runnable() {
             @Override
             public void run() {
@@ -74,8 +87,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 density = metrics.densityDpi;
                 sphere.circleWidth = circle.getWidth();
                 sphere.circleHeight = circle.getHeight();
-                width = ((ConstraintLayout) circle.getParent()).getWidth() - sphere.circleWidth;
-                height = ((ConstraintLayout) circle.getParent()).getHeight() - sphere.circleHeight;
+                width = ((FrameLayout) circle.getParent()).getWidth() - sphere.circleWidth;
+                height = ((FrameLayout) circle.getParent()).getHeight() - sphere.circleHeight;
+                //surfaceView.setLayoutParams(new FrameLayout.LayoutParams((int) width + sphere.circleWidth, (int) height + sphere.circleHeight)); //Surface view se stáhnul na polovic z nějakého důvodu -_-
                 width = pixelsToMeters((int) width);
                 height = pixelsToMeters((int) height);
                 circle.setX(width / 2);
@@ -87,7 +101,45 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
         Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
         orientation = display.getRotation();
+
+        /*surfaceView = findViewById(R.id.surfaceView);
+        surfaceView.getHolder().addCallback(new SurfaceHolder.Callback() {
+            @Override
+            public void surfaceCreated(SurfaceHolder surfaceHolder) {
+                addObstacles();
+                draw();
+            }
+
+            @Override
+            public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+
+            }
+        });*/
+
     }
+
+    /*private void addObstacles() {
+        for (int i = 0; i < 20; i++) {
+            Obstacle obstacle = new Obstacle(surfaceView.getWidth(), surfaceView.getHeight(), this);
+            obstacles.add(obstacle);
+        }
+    }
+
+    private void draw() {
+        Canvas canvas = surfaceView.getHolder().lockCanvas();
+
+        canvas.drawColor(Color.WHITE);
+        for (Obstacle obstacle : obstacles) {
+            canvas.drawRect((obstacle.getX()), (obstacle.getY()), obstacle.getX() + obstacle.getWidth(), obstacle.getY() + obstacle.getHeight(), new Paint(Color.GRAY));
+        }
+
+        surfaceView.getHolder().unlockCanvasAndPost(canvas);
+    }*/
 
     @Override
     protected void onResume() {
@@ -193,6 +245,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 sphere.velocity[1] *= -REFLECTION;
             }
 
+            for (Obstacle obstacle : obstacles) {
+                obstacle.handleCollision(sphere);
+            }
             //System.out.println(String.format("%s %s", /*sphere.velocity[0]*/" - ", sphere.velocity[1]));
         }
 
@@ -206,11 +261,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return (f < NOISE && f > -NOISE) ? 0 : f;
     }
 
-    private float pixelsToMeters(int pixelsCount) {
+    public float pixelsToMeters(int pixelsCount) {
         return ((float) pixelsCount / (float) density / 39f);
     }
 
-    private int metersToPixels(float metersCount) {
+    public int metersToPixels(float metersCount) {
         return (int) (metersCount * 39f * (float) density);
     }
 
