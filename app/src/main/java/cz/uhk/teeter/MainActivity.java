@@ -8,9 +8,14 @@ import android.os.Bundle;
 import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.view.Display;
+import android.view.Surface;
 import android.view.View;
+import android.view.WindowManager;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
+
+    private int orientation;
 
     public static class Sphere {
         public int circleWidth, circleHeight;
@@ -79,6 +84,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                 init = true;
             }
         });
+
+        Display display = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+        orientation = display.getRotation();
     }
 
     @Override
@@ -136,19 +144,27 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             nowFriction = FRICTION;
         }
 
-        //TODO - velocity[0] do záporu roste rychleji
-
-        sphere.velocity[0] = (sphere.velocity[0] * nowFriction) + (newVelocityX);
-        sphere.velocity[1] = (sphere.velocity[1] * nowFriction) + (newVelocityY);
+        // změna vektorů dle natočení displeje
+        float xValue, yValue;
+        if (orientation == Surface.ROTATION_0) {
+            xValue = newVelocityX;
+            yValue = newVelocityY;
+        } else if (orientation == Surface.ROTATION_90) {
+            xValue = -newVelocityY;
+            yValue = newVelocityX;
+        } else if (orientation == Surface.ROTATION_180) {
+            xValue = -newVelocityX;
+            yValue = -newVelocityY;
+        } else {
+            xValue = newVelocityY;
+            yValue = -newVelocityX;
+        }
+        sphere.velocity[0] = (sphere.velocity[0] * nowFriction) + (xValue);
+        sphere.velocity[1] = (sphere.velocity[1] * nowFriction) + (yValue);
 
         //TODO - detekci hodu s telefonem - aby to nerozhodilo kuličku
 
         lastMillis = nowMillis;
-
-//        if (sphere.velocity[0] > maxMax) maxMax = sphere.velocity[0];
-//        if (sphere.velocity[0] < maxMin) maxMin = sphere.velocity[0];
-
-        //System.out.println(String.format("%s %s", maxMax, maxMin));
 
         if (init) {
             if (sphere.position[0] >= 0 && sphere.position[0] <= (width)) {
@@ -157,6 +173,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             if (sphere.position[1] >= 0 && sphere.position[1] <= (height)) {
                 sphere.position[1] += (sphere.velocity[1] * deltaTime);
             }
+
             circle.setX(metersToPixels(sphere.position[0]));
             circle.setY(metersToPixels(sphere.position[1]));
 
