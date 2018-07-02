@@ -174,6 +174,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         linearAcceleration[1] = clearValues[1] - gravity[1];
         linearAcceleration[2] = clearValues[2] - gravity[2];
 
+        //System.out.println(String.format("%s %s %s : %s %s %s", gravity[0], gravity[1], gravity[2], linearAcceleration[0], linearAcceleration[1], linearAcceleration[2]));
+
         //normalizace gravitace
         float sum = Math.abs(gravity[0]) + Math.abs(gravity[1]) + Math.abs(gravity[2]);
         gravity[0] = (gravity[0] / sum * GRAVITY);
@@ -185,8 +187,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         float deltaTime = (float) (nowMillis - lastMillis) / 1000f;
 
         //              zpomalování třením
-        float newVelocityX = (gravity[0] * deltaTime) * SLOWDOWN_INDEX;
-        float newVelocityY = (gravity[1] * deltaTime) * SLOWDOWN_INDEX;
+
+        // v = a*t
+        float newVelocityX = (gravity[0] * deltaTime);// * SLOWDOWN_INDEX;
+        float newVelocityY = (gravity[1] * deltaTime);// * SLOWDOWN_INDEX;
 
         float nowFriction;
         //při nulové pozici chceme vyšší tření
@@ -211,6 +215,11 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             xValue = newVelocityY;
             yValue = -newVelocityX;
         }
+
+        // v = v0 + a*t
+
+        // TODO - aktuální rychlost alfa, nová ryhclost 1-alfa
+
         sphere.velocity[0] = (sphere.velocity[0] * nowFriction) + (xValue);
         sphere.velocity[1] = (sphere.velocity[1] * nowFriction) + (yValue);
 
