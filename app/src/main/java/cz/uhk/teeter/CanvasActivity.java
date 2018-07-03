@@ -15,7 +15,7 @@ import android.widget.Toast;
 
 public class CanvasActivity extends AppCompatActivity {
 
-    private final static int FPS = 60;
+    private final static int FPS = 120;
     private Runnable runnable;
     private Handler handler;
     private SurfaceView surfaceView;
