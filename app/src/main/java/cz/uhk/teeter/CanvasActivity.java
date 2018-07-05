@@ -13,6 +13,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class CanvasActivity extends AppCompatActivity {
 
     private final static int FPS = 120;
@@ -22,9 +25,12 @@ public class CanvasActivity extends AppCompatActivity {
     private Handler handler;
     private SurfaceView surfaceView;
 
-    Paint paint;
+    Paint paintCircle;
+    private Paint paintHoles;
     SensorHandler sensorHandler;
     private boolean init;
+
+    private List<Hole> holes;
 
 
     @Override
@@ -46,21 +52,36 @@ public class CanvasActivity extends AppCompatActivity {
 
         handler = new Handler();
         sensorHandler = new SensorHandler();
-        paint = new Paint();
-        paint.setStyle(Paint.Style.FILL);
-        paint.setColor(Color.BLACK);
+        paintCircle = new Paint();
+        paintCircle.setStyle(Paint.Style.FILL);
+        paintCircle.setColor(Color.GRAY);
+
+        paintHoles = new Paint();
+        paintHoles.setStyle(Paint.Style.FILL);
+        paintHoles.setColor(Color.BLACK);
 
         runnable = new Runnable() {
             @Override
             public void run() {
                 if (init) {
                     draw();
+                    detectFails();
                 }
 
                 handler.postDelayed(runnable, 1000 / FPS);
             }
         };
 
+        createRandomHoles();
+    }
+
+    private void createRandomHoles() {
+        holes = new ArrayList<>();
+        int widthPixels = getResources().getDisplayMetrics().widthPixels;
+        int heightPixels = getResources().getDisplayMetrics().heightPixels;
+        for (int i = 0; i < 20; i++) {
+            holes.add(new Hole(widthPixels, heightPixels));
+        }
     }
 
     @Override
@@ -101,8 +122,25 @@ public class CanvasActivity extends AppCompatActivity {
         Sphere.Point2D position = sensorHandler.getPosition();
         if (position != null && canvas != null) {
             canvas.drawColor(Color.WHITE);
-            canvas.drawCircle(position.x, position.y, CIRCLE_RADIUS, paint);
+            canvas.drawCircle(position.x, position.y, CIRCLE_RADIUS, paintCircle);
+            for (Hole hole : holes) {
+                canvas.drawCircle(hole.getPositionInMeters().x, hole.getPositionInMeters().y, CIRCLE_RADIUS, paintHoles);
+            }
         }
         surfaceView.getHolder().unlockCanvasAndPost(canvas);
+    }
+
+    private void detectFails() {
+        Sphere.Point2D position = sensorHandler.getPosition();
+        if (position != null) {
+            for (Hole hole : holes) {
+                //c2 = a2 + b2 - pokud je c kratší než radius kuličky, pak díra
+                //TODO -
+                if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < CIRCLE_RADIUS){
+                    Toast.makeText(this, "PROHRÁL JSI", Toast.LENGTH_SHORT).show();
+                    break;
+                }
+            }
+        }
     }
 }

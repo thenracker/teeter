@@ -189,7 +189,7 @@ public class SensorHandler implements SensorEventListener {
     }
 
     public float pixelsToMeters(int pixelsCount) {
-        return ((float) pixelsCount / (float) density / 39f);
+        return ((float) pixelsCount / (float) density / 39f); //39 - to jest převod z palců na metr .. protože density je v PPI - pixels per inch
     }
 
     public int metersToPixels(float metersCount) {
