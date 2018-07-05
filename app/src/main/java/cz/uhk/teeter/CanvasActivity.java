@@ -16,12 +16,16 @@ import android.widget.Toast;
 public class CanvasActivity extends AppCompatActivity {
 
     private final static int FPS = 120;
+    private final static float CIRCLE_RADIUS = 20;
+
     private Runnable runnable;
     private Handler handler;
     private SurfaceView surfaceView;
+
     Paint paint;
     SensorHandler sensorHandler;
     private boolean init;
+
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -86,10 +90,10 @@ public class CanvasActivity extends AppCompatActivity {
         if (!sensorHandler.isSphereLocked()) {
             sensorHandler.lockSphere();
         }
-        super.onPause();
         sensorHandler.finish(this);
         handler.removeCallbacks(runnable);
         init = false;
+        super.onPause();
     }
 
     private void draw() {
@@ -97,7 +101,7 @@ public class CanvasActivity extends AppCompatActivity {
         Sphere.Point2D position = sensorHandler.getPosition();
         if (position != null && canvas != null) {
             canvas.drawColor(Color.WHITE);
-            canvas.drawCircle(position.x, position.y, 20, paint);
+            canvas.drawCircle(position.x, position.y, CIRCLE_RADIUS, paint);
         }
         surfaceView.getHolder().unlockCanvasAndPost(canvas);
     }
