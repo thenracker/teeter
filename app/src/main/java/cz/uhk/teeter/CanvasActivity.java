@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
@@ -32,6 +33,8 @@ public class CanvasActivity extends AppCompatActivity {
 
     private List<Hole> holes;
 
+    private float xDown = 0f;
+    private float yDown = 0f;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -79,9 +82,9 @@ public class CanvasActivity extends AppCompatActivity {
         holes = new ArrayList<>();
         int widthPixels = getResources().getDisplayMetrics().widthPixels;
         int heightPixels = getResources().getDisplayMetrics().heightPixels;
-        for (int i = 0; i < 20; i++) {
-            holes.add(new Hole(widthPixels, heightPixels));
-        }
+        /*for (int i = 0; i < 20; i++) {
+            //holes.add(new Hole(widthPixels, heightPixels));
+        }*/
     }
 
     @Override
@@ -97,6 +100,36 @@ public class CanvasActivity extends AppCompatActivity {
                     @Override
                     public void onClick(View v) {
                         sensorHandler.lockSphere();
+                    }
+                });
+
+                surfaceView.setOnTouchListener(new View.OnTouchListener() {
+                    @Override
+                    public boolean onTouch(View view, MotionEvent motionEvent) {
+                        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN){
+                            if (xDown == 0){
+                                xDown = motionEvent.getX();
+                                yDown = motionEvent.getY();
+                            }
+                            return true;
+                        }
+
+                        if (motionEvent.getAction() == MotionEvent.ACTION_UP){
+                            float x = motionEvent.getX();
+                            float y = motionEvent.getY();
+
+                            if (Math.abs(x - xDown) < 20 && Math.abs(y - yDown) < 20){ //třeba 20 pixelů tolerance
+                                holes.add(new Hole((int)x, (int)y));
+                            } else {
+                                //TODO
+                                //obastacles.add(new Obstacle(xDown, yDown, x, y));
+                            }
+                            xDown = 0f;
+                            yDown = 0f;
+
+                            return true;
+                        }
+                        return false;
                     }
                 });
             }
@@ -126,6 +159,7 @@ public class CanvasActivity extends AppCompatActivity {
             for (Hole hole : holes) {
                 canvas.drawCircle(hole.getPositionInMeters().x, hole.getPositionInMeters().y, CIRCLE_RADIUS, paintHoles);
             }
+            // for (Obstacle obstacle : obstacles) canvas.drawRect(. . . . BARVA);
         }
         surfaceView.getHolder().unlockCanvasAndPost(canvas);
     }

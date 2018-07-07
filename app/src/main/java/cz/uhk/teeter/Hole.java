@@ -6,9 +6,10 @@ public class Hole {
 
     private Sphere.Point2D positionInMeters;
 
-    public Hole(int displayWidth, int displayHeight) {
-        Random random = new Random();
-        this.positionInMeters = new Sphere.Point2D(random.nextInt(displayWidth), random.nextInt(displayHeight));
+    public Hole(int x, int y) {
+        //Random random = new Random();
+        //this.positionInMeters = new Sphere.Point2D(random.nextInt(displayWidth), random.nextInt(displayHeight));
+        this.positionInMeters = new Sphere.Point2D(x, y);
     }
 
     public Sphere.Point2D getPositionInMeters() {
