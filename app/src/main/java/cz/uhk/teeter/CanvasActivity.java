@@ -53,6 +53,12 @@ public class CanvasActivity extends AppCompatActivity {
         surfaceView = findViewById(R.id.surfaceView);
         Toast.makeText(this, getResources().getString(R.string.tap_to_play), Toast.LENGTH_SHORT).show();
 
+        findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                sensorHandler.lockSphere();
+            }
+        });
 
         handler = new Handler();
         sensorHandler = new SensorHandler();
