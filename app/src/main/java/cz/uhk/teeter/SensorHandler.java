@@ -25,7 +25,7 @@ public class SensorHandler implements SensorEventListener {
 
     private long lastMillis;
     private float width, height;
-    private int density;
+    private static int density;
 
     private final float GRAVITY = 9.8f;
     private float FRICTION = 0.95f;
@@ -188,11 +188,11 @@ public class SensorHandler implements SensorEventListener {
         return (f < NOISE && f > -NOISE) ? 0 : f;
     }
 
-    public float pixelsToMeters(int pixelsCount) {
+    public static float pixelsToMeters(int pixelsCount) {
         return ((float) pixelsCount / (float) density / 39f); //39 - to jest převod z palců na metr .. protože density je v PPI - pixels per inch
     }
 
-    public int metersToPixels(float metersCount) {
+    public static int metersToPixels(float metersCount) {
         return (int) (metersCount * 39f * (float) density);
     }
 

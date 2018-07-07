@@ -32,6 +32,7 @@ public class CanvasActivity extends AppCompatActivity {
     private boolean init;
 
     private List<Hole> holes;
+    private List<Obstacle> obstacles;
 
     private float xDown = 0f;
     private float yDown = 0f;
@@ -75,11 +76,12 @@ public class CanvasActivity extends AppCompatActivity {
             }
         };
 
-        createRandomHoles();
+        createLists();
     }
 
-    private void createRandomHoles() {
+    private void createLists() {
         holes = new ArrayList<>();
+        obstacles = new ArrayList<>();
         int widthPixels = getResources().getDisplayMetrics().widthPixels;
         int heightPixels = getResources().getDisplayMetrics().heightPixels;
         /*for (int i = 0; i < 20; i++) {
@@ -121,8 +123,7 @@ public class CanvasActivity extends AppCompatActivity {
                             if (Math.abs(x - xDown) < 20 && Math.abs(y - yDown) < 20){ //třeba 20 pixelů tolerance
                                 holes.add(new Hole((int)x, (int)y));
                             } else {
-                                //TODO
-                                //obastacles.add(new Obstacle(xDown, yDown, x, y));
+                                obstacles.add(new Obstacle(xDown, yDown, x, y));
                             }
                             xDown = 0f;
                             yDown = 0f;
@@ -159,7 +160,9 @@ public class CanvasActivity extends AppCompatActivity {
             for (Hole hole : holes) {
                 canvas.drawCircle(hole.getPositionInMeters().x, hole.getPositionInMeters().y, CIRCLE_RADIUS, paintHoles);
             }
-            // for (Obstacle obstacle : obstacles) canvas.drawRect(. . . . BARVA);
+            for (Obstacle obs : obstacles) {
+                canvas.drawRect(obs.getX(), obs.getY(), obs.getWidth(), obs.getHeight(), paintHoles);
+            }
         }
         surfaceView.getHolder().unlockCanvasAndPost(canvas);
     }
