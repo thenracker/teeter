@@ -1,59 +1,72 @@
 package cz.uhk.teeter;
 
-import java.util.Random;
+import static cz.uhk.teeter.SensorHandler.REFLECTION;
 
 public class Obstacle {
 
-    private int x, y, width, height;
-    private CanvasActivity canvasActivity;
+    private float x, y, width, height;
 
-    public Obstacle(float width, float height, CanvasActivity canvasActivity) {
-        this.width = 50;
-        this.height = 50; //pixelů zatím
+    public Obstacle(float x, float y, float width, float height) {
+        this.width = width;
+        this.height = height;
 
-        this.x = new Random().nextInt((int) width - 20) + 20;
-        this.y = new Random().nextInt((int) height - 20) + 20;
-
-        this.canvasActivity = canvasActivity;
+        this.x = x;
+        this.y = y;
     }
 
 
     public void handleCollision(Sphere sphere) {
 
-//        float[] position = new float[]{mainActivity.metersToPixels(sphere.getPositionPoint().x), mainActivity.metersToPixels(sphere.getPositionPoint().y)};
-//
-//        // kolize pravá strana
-//        if (position[0] >= (x - sphere.circleWidth)
-//                && position[1] > y - sphere.circleHeight
-//                && position[1] < y + height) {
-//            position[0] = x - sphere.circleWidth;
-//            sphere.velocity[0] *= -REFLECTION;
-//        }
-//
-//        // kolize levá strana
-//        if (position[0] <= (x + sphere.circleWidth)
-//                && position[1] > y - sphere.circleHeight
-//                && position[1] < y + height) {
-//            position[0] = x + sphere.circleWidth;
-//            sphere.velocity[0] *= -REFLECTION;
-//        }
+        float[] position = new float[]{sphere.getPositionInMeters().x, sphere.getPositionInMeters().y};
+
+        // kolize pravá strana
+        if (position[0] >= (x - sphere.radius)
+                && position[1] > y - sphere.radius
+                && position[1] < y + height) {
+            position[0] = x - sphere.radius;
+            sphere.setVelocityX(sphere.getVelocityX() * -REFLECTION);
+        }
+
+        // kolize levá strana
+        if (position[0] <= (x + sphere.radius)
+                && position[1] > y - sphere.radius
+                && position[1] < y + height) {
+            position[0] = x + sphere.radius;
+            sphere.setVelocityX(sphere.getVelocityX() * -REFLECTION);
+        }
 
         //TODO zbytek stran
     }
 
-    public int getX() {
+    public float getX() {
         return x;
     }
 
-    public int getY() {
+    public void setX(float x) {
+        this.x = x;
+    }
+
+    public float getY() {
         return y;
     }
 
-    public int getWidth() {
+    public void setY(float y) {
+        this.y = y;
+    }
+
+    public float getWidth() {
         return width;
     }
 
-    public int getHeight() {
+    public void setWidth(float width) {
+        this.width = width;
+    }
+
+    public float getHeight() {
         return height;
+    }
+
+    public void setHeight(float height) {
+        this.height = height;
     }
 }
