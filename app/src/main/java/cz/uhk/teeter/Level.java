@@ -7,13 +7,14 @@ import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.List;
 
 public class Level {
 
-    private List<Obstacle> obstacles;
+    private List<Obstacle> obstacles = new ArrayList<>();
 
-    private List<Hole> holes;
+    private List<Hole> holes = new ArrayList<>();
 
     private Sphere.Point2D startingPosition;
 
@@ -52,16 +53,24 @@ public class Level {
         this.endPosition = endPosition;
     }
 
+    public boolean hasStartingPosition() {
+        return startingPosition != null;
+    }
+
+    public boolean hasEndPosition() {
+        return endPosition != null;
+    }
+
     public static class Loader {
 
-        public Level loadFromAssets(Context context, String assetFileName) throws IOException{
+        public Level loadFromAssets(Context context, String assetFileName) throws IOException {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(context.getAssets().open(assetFileName)));
             Gson gson = new Gson();
             Level level = gson.fromJson(bufferedReader, Level.class);
             return level;
         }
 
-        public void saveToJson(Level level){
+        public void saveToJson(Level level) {
             Gson gson = new Gson();
             String json = gson.toJson(level);
             System.out.println(json); //TODO odtud posílat na server

@@ -10,8 +10,6 @@ import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.WindowManager;
 
-import java.util.ArrayList;
-
 import static android.content.Context.SENSOR_SERVICE;
 import static android.content.Context.WINDOW_SERVICE;
 
@@ -34,8 +32,9 @@ public class SensorHandler implements SensorEventListener {
     private final float NOISE = 0.35f;
 
     private Sphere sphere;
-    private ArrayList<Obstacle> obstacles = new ArrayList<>();
+    private Level level;
     private boolean sphereLocked = true;
+    private boolean started = false;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -124,29 +123,31 @@ public class SensorHandler implements SensorEventListener {
             spherePosition.y += (sphere.getVelocityY() * deltaTime);
         }
         //border světa - detekce kolize
+        //leva
         if (spherePosition.x < pixelsToMeters(sphere.radius)) {
             spherePosition.x = pixelsToMeters(sphere.radius);
             sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
-        } else if (spherePosition.x > (width)) {
+        }//prava
+        else if (spherePosition.x > (width)) {
             spherePosition.x = (width);
             sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
-        }
+        }//horni
         if (spherePosition.y < pixelsToMeters(sphere.radius)) {
             spherePosition.y = pixelsToMeters(sphere.radius);
             sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
-        } else if (spherePosition.y > (height)) {
+        }//dolni
+        else if (spherePosition.y > (height)) {
             spherePosition.y = (height);
             sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
         }
 
-        for (Obstacle obstacle : obstacles) {
-            obstacle.handleCollision(sphere);
-        }
-        //System.out.println(String.format("%s %s", /*sphere.velocity[0]*/" - ", sphere.velocity[1]));
-
         sphere.setPositionPoint(spherePosition);
 
-        sphere.setPositionInMeters(new Sphere.Point2D(metersToPixels(spherePosition.x), metersToPixels(spherePosition.y)));
+        for (Obstacle obstacle : level.getObstacles()) {
+            obstacle.handleCollision(sphere);
+        }
+
+        sphere.updatePositionInPixels();
 
     }
 
@@ -155,7 +156,7 @@ public class SensorHandler implements SensorEventListener {
 
     }
 
-    public void init(Context context, SurfaceView surfaceView) {
+    public void init(Context context, SurfaceView surfaceView, Level level) {
         Display display = ((WindowManager) context.getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
         orientation = display.getRotation();
         density = context.getResources().getDisplayMetrics().densityDpi;
@@ -167,10 +168,15 @@ public class SensorHandler implements SensorEventListener {
             height = surfaceView.getHeight() - sphere.radius;
             width = pixelsToMeters((int) width);
             height = pixelsToMeters((int) height);
-            sphere.setPositionPoint(new Sphere.Point2D(width / 2, height / 2));
-            sphere.setPositionInMeters(new Sphere.Point2D(metersToPixels(width / 2), metersToPixels(height / 2)));
+            if (level.hasStartingPosition()) {
+                sphere.setPositionPoint(level.getStartingPosition());
+            } else {
+                sphere.setPositionPoint(new Sphere.Point2D(width / 2, height / 2));
+            }
+            sphere.setPositionInPixels(new Sphere.Point2D(metersToPixels(width / 2), metersToPixels(height / 2)));
 
         }
+        this.level = level;
         SensorManager sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_FASTEST);
     }
@@ -181,7 +187,7 @@ public class SensorHandler implements SensorEventListener {
     }
 
     public Sphere.Point2D getPosition() {
-        return sphere.getPositionInMeters();
+        return sphere.getPositionInPixels();
     }
 
     private float clear(float f) {
@@ -197,11 +203,25 @@ public class SensorHandler implements SensorEventListener {
     }
 
     public void lockSphere() {
-        sphereLocked = !sphereLocked;
+        if (!started) {
+            resetSphere();
+        } else {
+            sphereLocked = !sphereLocked;
+        }
     }
 
     public boolean isSphereLocked() {
         return sphereLocked;
+    }
+
+    public void resetSphere() {
+        started = true;
+        if (level.hasStartingPosition()) {
+            sphere.setPositionInPixels(level.getStartingPosition());
+            sphere.setPositionPoint(new Sphere.Point2D(pixelsToMeters((int) level.getStartingPosition().x), pixelsToMeters((int) level.getStartingPosition().y)));
+            sphere.setVelocityX(0);
+            sphere.setVelocityY(0);
+        }
     }
 }
 

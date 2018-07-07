@@ -14,28 +14,27 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class CanvasActivity extends AppCompatActivity {
 
     private final static int FPS = 120;
     private final static float CIRCLE_RADIUS = 20;
+    private final static float HOLE_RADIUS = 30;
 
     private Runnable runnable;
     private Handler handler;
     private SurfaceView surfaceView;
 
-    Paint paintCircle;
+    private Paint paintCircle;
     private Paint paintHoles;
+    private Paint paintEnd;
+    private Paint paintStart;
     SensorHandler sensorHandler;
     private boolean init;
 
-    private List<Hole> holes;
-    private List<Obstacle> obstacles;
-
     private float xDown = 0f;
     private float yDown = 0f;
+
+    private Level level;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -70,29 +69,28 @@ public class CanvasActivity extends AppCompatActivity {
         paintHoles.setStyle(Paint.Style.FILL);
         paintHoles.setColor(Color.BLACK);
 
+        paintEnd = new Paint();
+        paintEnd.setStyle(Paint.Style.FILL);
+        paintEnd.setColor(Color.GREEN);
+
+        paintStart = new Paint();
+        paintStart.setStyle(Paint.Style.FILL);
+        paintStart.setColor(Color.RED);
+
         runnable = new Runnable() {
             @Override
             public void run() {
                 if (init) {
                     draw();
                     detectFails();
+                    detectWin();
                 }
 
                 handler.postDelayed(runnable, 1000 / FPS);
             }
         };
 
-        createLists();
-    }
-
-    private void createLists() {
-        holes = new ArrayList<>();
-        obstacles = new ArrayList<>();
-        int widthPixels = getResources().getDisplayMetrics().widthPixels;
-        int heightPixels = getResources().getDisplayMetrics().heightPixels;
-        /*for (int i = 0; i < 20; i++) {
-            //holes.add(new Hole(widthPixels, heightPixels));
-        }*/
+        level = new Level();
     }
 
     @Override
@@ -101,7 +99,7 @@ public class CanvasActivity extends AppCompatActivity {
         surfaceView.post(new Runnable() {
             @Override
             public void run() {
-                sensorHandler.init(CanvasActivity.this, surfaceView);
+                sensorHandler.init(CanvasActivity.this, surfaceView, level);
                 init = true;
 
                 surfaceView.setOnClickListener(new View.OnClickListener() {
@@ -114,22 +112,28 @@ public class CanvasActivity extends AppCompatActivity {
                 surfaceView.setOnTouchListener(new View.OnTouchListener() {
                     @Override
                     public boolean onTouch(View view, MotionEvent motionEvent) {
-                        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN){
-                            if (xDown == 0){
+                        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+                            if (xDown == 0) {
                                 xDown = motionEvent.getX();
                                 yDown = motionEvent.getY();
                             }
                             return true;
                         }
 
-                        if (motionEvent.getAction() == MotionEvent.ACTION_UP){
+                        if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                             float x = motionEvent.getX();
                             float y = motionEvent.getY();
 
-                            if (Math.abs(x - xDown) < 20 && Math.abs(y - yDown) < 20){ //třeba 20 pixelů tolerance
-                                holes.add(new Hole((int)x, (int)y));
+                            if (Math.abs(x - xDown) < 20 && Math.abs(y - yDown) < 20) { //třeba 20 pixelů tolerance
+                                if (!level.hasStartingPosition()) {
+                                    level.setStartingPosition(new Sphere.Point2D(x, y));
+                                } else if (!level.hasEndPosition()) {
+                                    level.setEndPosition(new Sphere.Point2D(x, y));
+                                } else {
+                                    level.getHoles().add(new Hole((int) x, (int) y));
+                                }
                             } else {
-                                obstacles.add(new Obstacle(xDown, yDown, x, y));
+                                level.getObstacles().add(new Obstacle((int) xDown, (int) yDown, (int) x, (int) y));
                             }
                             xDown = 0f;
                             yDown = 0f;
@@ -162,13 +166,25 @@ public class CanvasActivity extends AppCompatActivity {
         Sphere.Point2D position = sensorHandler.getPosition();
         if (position != null && canvas != null) {
             canvas.drawColor(Color.WHITE);
-            canvas.drawCircle(position.x, position.y, CIRCLE_RADIUS, paintCircle);
-            for (Hole hole : holes) {
-                canvas.drawCircle(hole.getPositionInMeters().x, hole.getPositionInMeters().y, CIRCLE_RADIUS, paintHoles);
+
+            if (level.hasStartingPosition()) {
+                canvas.drawCircle(level.getStartingPosition().x, level.getStartingPosition().y, HOLE_RADIUS, paintStart);
             }
-            for (Obstacle obs : obstacles) {
+
+            if (level.hasEndPosition()) {
+                canvas.drawCircle(level.getEndPosition().x, level.getEndPosition().y, HOLE_RADIUS, paintEnd);
+            }
+
+            for (Hole hole : level.getHoles()) {
+                canvas.drawCircle(hole.getPositionInMeters().x, hole.getPositionInMeters().y, HOLE_RADIUS, paintHoles);
+            }
+
+            for (Obstacle obs : level.getObstacles()) {
                 canvas.drawRect(obs.getX(), obs.getY(), obs.getWidth(), obs.getHeight(), paintHoles);
             }
+
+            canvas.drawCircle(position.x, position.y, CIRCLE_RADIUS, paintCircle);
+
         }
         surfaceView.getHolder().unlockCanvasAndPost(canvas);
     }
@@ -176,14 +192,26 @@ public class CanvasActivity extends AppCompatActivity {
     private void detectFails() {
         Sphere.Point2D position = sensorHandler.getPosition();
         if (position != null) {
-            for (Hole hole : holes) {
+            for (Hole hole : level.getHoles()) {
                 //c2 = a2 + b2 - pokud je c kratší než radius kuličky, pak díra
                 //TODO -
-                if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < CIRCLE_RADIUS){
+                if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < HOLE_RADIUS) {
                     Toast.makeText(this, "PROHRÁL JSI", Toast.LENGTH_SHORT).show();
+                    sensorHandler.lockSphere();
+                    sensorHandler.resetSphere();
                     break;
                 }
             }
+        }
+
+    }
+
+    private void detectWin() {
+        if (!level.hasEndPosition())
+            return;
+        Sphere.Point2D position = sensorHandler.getPosition();
+        if (Math.sqrt((Math.pow(level.getEndPosition().x - position.x, 2) + Math.pow(level.getEndPosition().y - position.y, 2))) < HOLE_RADIUS) {
+            Toast.makeText(this, "VYHRAL JSI", Toast.LENGTH_SHORT).show();
         }
     }
 }

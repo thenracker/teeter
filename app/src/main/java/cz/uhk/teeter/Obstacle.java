@@ -4,11 +4,11 @@ import static cz.uhk.teeter.SensorHandler.REFLECTION;
 
 public class Obstacle {
 
-    private float x, y, width, height;
+    private int x, y, x2, y2;
 
-    public Obstacle(float x, float y, float width, float height) {
-        this.width = width;
-        this.height = height;
+    public Obstacle(int x, int y, int width, int height) {
+        this.x2 = width;
+        this.y2 = height;
 
         this.x = x;
         this.y = y;
@@ -17,56 +17,72 @@ public class Obstacle {
 
     public void handleCollision(Sphere sphere) {
 
-        float[] position = new float[]{sphere.getPositionInMeters().x, sphere.getPositionInMeters().y};
+        Sphere.Point2D spherePosition = sphere.getPositionInPixels();
 
-        // kolize pravá strana
-        if (position[0] >= (x - sphere.radius)
-                && position[1] > y - sphere.radius
-                && position[1] < y + height) {
-            position[0] = x - sphere.radius;
-            sphere.setVelocityX(sphere.getVelocityX() * -REFLECTION);
+        // kolize leva strana
+        if (sphere.getVelocityX() < 0 && //leti smerem doprava
+                spherePosition.x > x - sphere.radius
+                && spherePosition.x < x + sphere.radius
+                && spherePosition.y > y - sphere.radius
+                && spherePosition.y < y2 + sphere.radius) {
+            sphere.getPositionPoint().x = SensorHandler.pixelsToMeters(x - sphere.radius);
+            sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
+        } //kolize prava strana
+        else if (sphere.getVelocityX() > 0//leti smerem doleva
+                && spherePosition.x < x2 + sphere.radius
+                && spherePosition.x > x2 - sphere.radius
+                && spherePosition.y > y - sphere.radius
+                && spherePosition.y < y2 + sphere.radius) {
+            sphere.getPositionPoint().x = SensorHandler.pixelsToMeters(x2 + sphere.radius);
+            sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
+        } //kolize horni strana
+        else if (sphere.getVelocityY() > 0 //leti dolu
+                && spherePosition.x > x - sphere.radius
+                && spherePosition.x < x2 + sphere.radius
+                && spherePosition.y > y - sphere.radius
+                && spherePosition.y < y + sphere.radius) {
+            sphere.getPositionPoint().y = SensorHandler.pixelsToMeters(y - sphere.radius);
+            sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
+        } // kolize spodni strana
+        else if (sphere.getVelocityY() < 0 //leti nahoru
+                && spherePosition.x > x - sphere.radius
+                && spherePosition.x < x2 + sphere.radius
+                && spherePosition.y < y2 + sphere.radius
+                && spherePosition.y > y2 - sphere.radius) {
+            sphere.getPositionPoint().y = SensorHandler.pixelsToMeters(y2 + sphere.radius);
+            sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
         }
-
-        // kolize levá strana
-        if (position[0] <= (x + sphere.radius)
-                && position[1] > y - sphere.radius
-                && position[1] < y + height) {
-            position[0] = x + sphere.radius;
-            sphere.setVelocityX(sphere.getVelocityX() * -REFLECTION);
-        }
-
-        //TODO zbytek stran
     }
 
     public float getX() {
         return x;
     }
 
-    public void setX(float x) {
+    public void setX(int x) {
         this.x = x;
     }
 
-    public float getY() {
+    public int getY() {
         return y;
     }
 
-    public void setY(float y) {
+    public void setY(int y) {
         this.y = y;
     }
 
-    public float getWidth() {
-        return width;
+    public int getWidth() {
+        return x2;
     }
 
-    public void setWidth(float width) {
-        this.width = width;
+    public void setWidth(int width) {
+        this.x2 = width;
     }
 
-    public float getHeight() {
-        return height;
+    public int getHeight() {
+        return y2;
     }
 
-    public void setHeight(float height) {
-        this.height = height;
+    public void setHeight(int height) {
+        this.y2 = height;
     }
 }
