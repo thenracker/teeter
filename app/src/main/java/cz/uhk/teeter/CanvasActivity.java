@@ -212,6 +212,8 @@ public class CanvasActivity extends AppCompatActivity {
         Sphere.Point2D position = sensorHandler.getPosition();
         if (Math.sqrt((Math.pow(level.getEndPosition().x - position.x, 2) + Math.pow(level.getEndPosition().y - position.y, 2))) < HOLE_RADIUS + CIRCLE_RADIUS) {
             Toast.makeText(this, "VYHRAL JSI", Toast.LENGTH_SHORT).show();
+            sensorHandler.lockSphere();
+            sensorHandler.resetSphere();
         }
     }
 }
