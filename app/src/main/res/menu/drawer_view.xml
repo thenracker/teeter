@@ -7,16 +7,20 @@
             android:icon="@drawable/ic_launcher_background"
             android:title="Level 1" />
         <item
-            android:id="@+id/nav_gallery"
+            android:id="@+id/nav_level_2"
             android:icon="@drawable/ic_launcher_background"
-            android:title="Level 1"  />
+            android:title="Level 2"  />
         <item
-            android:id="@+id/nav_slideshow"
+            android:id="@+id/nav_level_3"
             android:icon="@drawable/ic_launcher_background"
-            android:title="Level 1"  />
+            android:title="Level 3"  />
         <item
-            android:id="@+id/nav_manage"
+            android:id="@+id/nav_level_4"
             android:icon="@drawable/ic_launcher_background"
-            android:title="Level 1" />
+            android:title="Level 4" />
+        <item
+            android:id="@+id/nav_level_5"
+            android:icon="@drawable/ic_launcher_background"
+            android:title="Level 5" />
     </group>
 </menu>

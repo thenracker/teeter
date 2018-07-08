@@ -75,8 +75,21 @@ public class CanvasActivity extends AppCompatActivity {
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-                if (item.getItemId() == R.id.nav_level_1){
+                if (item.getItemId() == R.id.nav_level_1) {
                     loadLevel(1);
+                }
+                if (item.getItemId() == R.id.nav_level_2) {
+                    //Level.Loader.saveToJson(level);
+                    loadLevel(2);
+                }
+                if (item.getItemId() == R.id.nav_level_3) {
+                    loadLevel(3);
+                }
+                if (item.getItemId() == R.id.nav_level_4) {
+                    loadLevel(4);
+                }
+                if (item.getItemId() == R.id.nav_level_5) {
+                    loadLevel(5);
                 }
                 return false;
             }
@@ -126,6 +139,12 @@ public class CanvasActivity extends AppCompatActivity {
     }
 
     private void loadLevel(int levelId) {
+        if (levelId == 0) {
+            level = new Level(surfaceView.getWidth(), surfaceView.getHeight());
+            sensorHandler.init(CanvasActivity.this, surfaceView, level);
+            return;
+
+        }
         try {
             level = Level.Loader.loadFromAssets(this, "level_" + levelId + ".txt", surfaceView.getWidth(), surfaceView.getHeight());
             sensorHandler.init(CanvasActivity.this, surfaceView, level);
