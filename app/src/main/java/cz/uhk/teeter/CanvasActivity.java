@@ -5,17 +5,21 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.NavigationView;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.Toast;
+
+import java.io.IOException;
 
 public class CanvasActivity extends AppCompatActivity {
 
@@ -68,7 +72,25 @@ public class CanvasActivity extends AppCompatActivity {
                 sensorHandler.lockSphere();
             }
         });
+        navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
+            @Override
+            public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+                if (item.getItemId() == R.id.nav_level_1){
+                    loadLevel(1);
+                }
+                return false;
+            }
+        });
         drawerLayout.openDrawer(Gravity.LEFT);
+
+        navigationView.getMenu().findItem(R.id.nav_level_1).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
+            @Override
+            public boolean onMenuItemClick(MenuItem menuItem) {
+
+                return false;
+            }
+        });
+
 
         handler = new Handler();
         sensorHandler = new SensorHandler();
@@ -101,7 +123,15 @@ public class CanvasActivity extends AppCompatActivity {
             }
         };
 
-        level = new Level();
+    }
+
+    private void loadLevel(int levelId) {
+        try {
+            level = Level.Loader.loadFromAssets(this, "level_" + levelId + ".txt", surfaceView.getWidth(), surfaceView.getHeight());
+            sensorHandler.init(CanvasActivity.this, surfaceView, level);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
@@ -110,6 +140,7 @@ public class CanvasActivity extends AppCompatActivity {
         surfaceView.post(new Runnable() {
             @Override
             public void run() {
+                level = new Level(surfaceView.getWidth(), surfaceView.getHeight());
                 sensorHandler.init(CanvasActivity.this, surfaceView, level);
                 init = true;
 
@@ -200,7 +231,7 @@ public class CanvasActivity extends AppCompatActivity {
             }
 
             for (Obstacle obs : level.getObstacles()) {
-                canvas.drawRect(obs.getX(), obs.getY(), obs.getWidth(), obs.getHeight(), paintHoles);
+                canvas.drawRect(obs.getX(), obs.getY(), obs.getX2(), obs.getY2(), paintHoles);
             }
 
             canvas.drawCircle(position.x, position.y, CIRCLE_RADIUS, paintCircle);

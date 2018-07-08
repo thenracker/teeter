@@ -12,6 +12,13 @@ import java.util.List;
 
 public class Level {
 
+    private int width, height;
+
+    public Level(int width, int height) {
+        this.width = width;
+        this.height = height;
+    }
+
     private List<Obstacle> obstacles = new ArrayList<>();
 
     private List<Hole> holes = new ArrayList<>();
@@ -63,17 +70,43 @@ public class Level {
 
     public static class Loader {
 
-        public Level loadFromAssets(Context context, String assetFileName) throws IOException {
+        public static Level loadFromAssets(Context context, String assetFileName, int width, int height) throws IOException {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(context.getAssets().open(assetFileName)));
             Gson gson = new Gson();
             Level level = gson.fromJson(bufferedReader, Level.class);
+            for (Hole hole : level.getHoles()) {
+                Sphere.Point2D position = hole.getPositionInMeters();
+                position.x = position.x * (float) width / (float) level.width;
+                position.y = position.y * (float) height / (float) level.height;
+            }
+            for (Obstacle obstacle : level.getObstacles()) {
+                obstacle.setX((int)(obstacle.getX() * (float) width / (float) level.width));
+                obstacle.setY((int)(obstacle.getY() * (float) width / (float) level.width));
+                obstacle.setX2((int)(obstacle.getX2() * (float) width / (float) level.width));
+                obstacle.setY2((int)(obstacle.getY2() * (float) width / (float) level.width));
+            }
+            {
+                Sphere.Point2D position = level.getStartingPosition();
+                position.x = position.x * (float) width / (float) level.width;
+                position.y = position.y * (float) height / (float) level.height;
+            }
+            {
+                Sphere.Point2D position = level.getEndPosition();
+                position.x = position.x * (float) width / (float) level.width;
+                position.y = position.y * (float) height / (float) level.height;
+            }
+
+            level.width = width;
+            level.height = height;
             return level;
         }
 
-        public void saveToJson(Level level) {
+        public static String saveToJson(Level level) {
             Gson gson = new Gson();
             String json = gson.toJson(level);
             System.out.println(json); //TODO odtud posílat na server
+            return json;
         }
     }
 }
+
