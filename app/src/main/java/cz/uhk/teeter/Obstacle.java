@@ -1,5 +1,6 @@
 package cz.uhk.teeter;
 
+import static cz.uhk.teeter.CanvasActivity.OBS_RADIUS;
 import static cz.uhk.teeter.SensorHandler.REFLECTION;
 
 public class Obstacle {
@@ -7,16 +8,37 @@ public class Obstacle {
     private int x, y, x2, y2;
 
     public Obstacle(int x, int y, int x2, int y2) {
-        if (x > x2){
+        if (x > x2) {
             int pom = x;
             x = x2;
             x2 = pom;
         }
-        if (y > y2){
+        if (y > y2) {
             int pom = y;
             y = y2;
             y2 = pom;
         }
+
+        int xDiff = x2 - x;
+        int yDiff = y2 - y;
+        if (yDiff > xDiff) {
+            if (xDiff > OBS_RADIUS) {
+                x += (xDiff - OBS_RADIUS) / 2;
+                x2 -= (xDiff - OBS_RADIUS) / 2;
+            } else {
+                x -= (OBS_RADIUS - xDiff) / 2;
+                x2 += (OBS_RADIUS - xDiff) / 2;
+            }
+        } else {
+            if (yDiff > OBS_RADIUS) {
+                y += (yDiff - OBS_RADIUS) / 2;
+                y2 -= (yDiff - OBS_RADIUS) / 2;
+            } else {
+                y -= (OBS_RADIUS - yDiff) / 2;
+                y2 += (OBS_RADIUS - yDiff) / 2;
+            }
+        }
+
         this.x = x;
         this.y = y;
 

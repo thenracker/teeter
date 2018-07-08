@@ -17,7 +17,8 @@ import android.widget.Toast;
 public class CanvasActivity extends AppCompatActivity {
 
     private final static int FPS = 120;
-    private final static float CIRCLE_RADIUS = 20;
+    public final static float CIRCLE_RADIUS = 20;
+    public final static float OBS_RADIUS = 30;
     private final static float HOLE_RADIUS = 30;
 
     private Runnable runnable;
