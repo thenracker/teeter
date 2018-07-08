@@ -23,9 +23,9 @@ public class Level {
 
     private List<Hole> holes = new ArrayList<>();
 
-    private Sphere.Point2D startingPosition;
+    private Ball.Point2D startingPosition;
 
-    private Sphere.Point2D endPosition;
+    private Ball.Point2D endPosition;
 
 
     public List<Obstacle> getObstacles() {
@@ -44,19 +44,19 @@ public class Level {
         this.holes = holes;
     }
 
-    public Sphere.Point2D getStartingPosition() {
+    public Ball.Point2D getStartingPosition() {
         return startingPosition;
     }
 
-    public void setStartingPosition(Sphere.Point2D startingPosition) {
+    public void setStartingPosition(Ball.Point2D startingPosition) {
         this.startingPosition = startingPosition;
     }
 
-    public Sphere.Point2D getEndPosition() {
+    public Ball.Point2D getEndPosition() {
         return endPosition;
     }
 
-    public void setEndPosition(Sphere.Point2D endPosition) {
+    public void setEndPosition(Ball.Point2D endPosition) {
         this.endPosition = endPosition;
     }
 
@@ -75,7 +75,7 @@ public class Level {
             Gson gson = new Gson();
             Level level = gson.fromJson(bufferedReader, Level.class);
             for (Hole hole : level.getHoles()) {
-                Sphere.Point2D position = hole.getPositionInMeters();
+                Ball.Point2D position = hole.getPositionInMeters();
                 position.x = position.x * (float) width / (float) level.width;
                 position.y = position.y * (float) height / (float) level.height;
             }
@@ -86,12 +86,12 @@ public class Level {
                 obstacle.setY2((int)(obstacle.getY2() * (float) width / (float) level.width));
             }
             {
-                Sphere.Point2D position = level.getStartingPosition();
+                Ball.Point2D position = level.getStartingPosition();
                 position.x = position.x * (float) width / (float) level.width;
                 position.y = position.y * (float) height / (float) level.height;
             }
             {
-                Sphere.Point2D position = level.getEndPosition();
+                Ball.Point2D position = level.getEndPosition();
                 position.x = position.x * (float) width / (float) level.width;
                 position.y = position.y * (float) height / (float) level.height;
             }

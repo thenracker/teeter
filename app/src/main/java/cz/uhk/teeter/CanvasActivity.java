@@ -12,7 +12,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Gravity;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.Window;
@@ -24,15 +23,16 @@ import java.io.IOException;
 public class CanvasActivity extends AppCompatActivity {
 
     private final static int FPS = 120;
-    public final static float CIRCLE_RADIUS = 20;
+    public final static float BALL_RADIUS = 20;
     public final static float OBS_RADIUS = 30;
     private final static float HOLE_RADIUS = 30;
+    private static final String ARG_LEVEL = "ARG_LEVEL";
 
     private Runnable runnable;
     private Handler handler;
     private SurfaceView surfaceView;
 
-    private Paint paintCircle;
+    private Paint paintBall;
     private Paint paintHoles;
     private Paint paintEnd;
     private Paint paintStart;
@@ -66,12 +66,12 @@ public class CanvasActivity extends AppCompatActivity {
         drawerLayout = findViewById(R.id.drawer_layout);
         drawerLayout.setScrimColor(Color.TRANSPARENT);
         navigationView = findViewById(R.id.nav_view);
-        navigationView.getHeaderView(0).findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                sensorHandler.lockSphere();
-            }
-        });
+//        navigationView.getHeaderView(0).findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                sensorHandler.lockBall();
+//            }
+//        });
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -99,7 +99,6 @@ public class CanvasActivity extends AppCompatActivity {
         navigationView.getMenu().findItem(R.id.nav_level_1).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
             @Override
             public boolean onMenuItemClick(MenuItem menuItem) {
-
                 return false;
             }
         });
@@ -107,9 +106,9 @@ public class CanvasActivity extends AppCompatActivity {
 
         handler = new Handler();
         sensorHandler = new SensorHandler();
-        paintCircle = new Paint();
-        paintCircle.setStyle(Paint.Style.FILL);
-        paintCircle.setColor(Color.GRAY);
+        paintBall = new Paint();
+        paintBall.setStyle(Paint.Style.FILL);
+        paintBall.setColor(Color.GRAY);
 
         paintHoles = new Paint();
         paintHoles.setStyle(Paint.Style.FILL);
@@ -131,7 +130,6 @@ public class CanvasActivity extends AppCompatActivity {
                     detectFails();
                     detectWin();
                 }
-
                 handler.postDelayed(runnable, 1000 / FPS);
             }
         };
@@ -141,13 +139,14 @@ public class CanvasActivity extends AppCompatActivity {
     private void loadLevel(int levelId) {
         if (levelId == 0) {
             level = new Level(surfaceView.getWidth(), surfaceView.getHeight());
-            sensorHandler.init(CanvasActivity.this, surfaceView, level);
+            sensorHandler.init(CanvasActivity.this, surfaceView, level, BALL_RADIUS);
             return;
 
         }
         try {
             level = Level.Loader.loadFromAssets(this, "level_" + levelId + ".txt", surfaceView.getWidth(), surfaceView.getHeight());
-            sensorHandler.init(CanvasActivity.this, surfaceView, level);
+            sensorHandler.init(CanvasActivity.this, surfaceView, level, BALL_RADIUS);
+            sensorHandler.resetBall();
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -159,51 +158,53 @@ public class CanvasActivity extends AppCompatActivity {
         surfaceView.post(new Runnable() {
             @Override
             public void run() {
-                level = new Level(surfaceView.getWidth(), surfaceView.getHeight());
-                sensorHandler.init(CanvasActivity.this, surfaceView, level);
+                if (level == null) {
+                    level = new Level(surfaceView.getWidth(), surfaceView.getHeight());
+                }
+                sensorHandler.init(CanvasActivity.this, surfaceView, level, BALL_RADIUS);
                 init = true;
 
                 surfaceView.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        sensorHandler.lockSphere();
+                        sensorHandler.lockBall();
                     }
                 });
 
-                surfaceView.setOnTouchListener(new View.OnTouchListener() {
-                    @Override
-                    public boolean onTouch(View view, MotionEvent motionEvent) {
-                        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                            if (xDown == 0) {
-                                xDown = motionEvent.getX();
-                                yDown = motionEvent.getY();
-                            }
-                            return true;
-                        }
-
-                        if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
-                            float x = motionEvent.getX();
-                            float y = motionEvent.getY();
-
-                            if (Math.abs(x - xDown) < 20 && Math.abs(y - yDown) < 20) { //třeba 20 pixelů tolerance
-                                if (!level.hasStartingPosition()) {
-                                    level.setStartingPosition(new Sphere.Point2D(x, y));
-                                } else if (!level.hasEndPosition()) {
-                                    level.setEndPosition(new Sphere.Point2D(x, y));
-                                } else {
-                                    level.getHoles().add(new Hole((int) x, (int) y));
-                                }
-                            } else {
-                                level.getObstacles().add(new Obstacle((int) xDown, (int) yDown, (int) x, (int) y));
-                            }
-                            xDown = 0f;
-                            yDown = 0f;
-
-                            return true;
-                        }
-                        return false;
-                    }
-                });
+//                surfaceView.setOnTouchListener(new View.OnTouchListener() {
+//                    @Override
+//                    public boolean onTouch(View view, MotionEvent motionEvent) {
+//                        if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
+//                            if (xDown == 0) {
+//                                xDown = motionEvent.getX();
+//                                yDown = motionEvent.getY();
+//                            }
+//                            return true;
+//                        }
+//
+//                        if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
+//                            float x = motionEvent.getX();
+//                            float y = motionEvent.getY();
+//
+//                            if (Math.abs(x - xDown) < 20 && Math.abs(y - yDown) < 20) { //třeba 20 pixelů tolerance
+//                                if (!level.hasStartingPosition()) {
+//                                    level.setStartingPosition(new Ball.Point2D(x, y));
+//                                } else if (!level.hasEndPosition()) {
+//                                    level.setEndPosition(new Ball.Point2D(x, y));
+//                                } else {
+//                                    level.getHoles().add(new Hole((int) x, (int) y));
+//                                }
+//                            } else {
+//                                level.getObstacles().add(new Obstacle((int) xDown, (int) yDown, (int) x, (int) y));
+//                            }
+//                            xDown = 0f;
+//                            yDown = 0f;
+//
+//                            return true;
+//                        }
+//                        return false;
+//                    }
+//                });
             }
         });
 
@@ -213,8 +214,8 @@ public class CanvasActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         //todo poreskat vypinani displeje, trosku se nam ta kulicka posouva :D
-        if (!sensorHandler.isSphereLocked()) {
-            sensorHandler.lockSphere();
+        if (!sensorHandler.isBallLocked()) {
+            sensorHandler.lockBall();
         }
         sensorHandler.finish(this);
         handler.removeCallbacks(runnable);
@@ -228,12 +229,15 @@ public class CanvasActivity extends AppCompatActivity {
             super.onBackPressed();
         } else {
             drawerLayout.openDrawer(Gravity.LEFT);
+            if (!sensorHandler.isBallLocked()) {
+                sensorHandler.lockBall();
+            }
         }
     }
 
     private void draw() {
         Canvas canvas = surfaceView.getHolder().lockCanvas();
-        Sphere.Point2D position = sensorHandler.getPosition();
+        Ball.Point2D position = sensorHandler.getPosition();
         if (position != null && canvas != null) {
             canvas.drawColor(Color.WHITE);
 
@@ -253,21 +257,21 @@ public class CanvasActivity extends AppCompatActivity {
                 canvas.drawRect(obs.getX(), obs.getY(), obs.getX2(), obs.getY2(), paintHoles);
             }
 
-            canvas.drawCircle(position.x, position.y, CIRCLE_RADIUS, paintCircle);
+            canvas.drawCircle(position.x, position.y, BALL_RADIUS, paintBall);
 
         }
         surfaceView.getHolder().unlockCanvasAndPost(canvas);
     }
 
     private void detectFails() {
-        Sphere.Point2D position = sensorHandler.getPosition();
+        Ball.Point2D position = sensorHandler.getPosition();
         if (position != null) {
             for (Hole hole : level.getHoles()) {
                 //c2 = a2 + b2 - pokud je c kratší než radius kuličky, pak díra
-                if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < HOLE_RADIUS + CIRCLE_RADIUS) {
+                if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < HOLE_RADIUS + BALL_RADIUS) {
                     Toast.makeText(this, "PROHRÁL JSI", Toast.LENGTH_SHORT).show();
-                    sensorHandler.lockSphere();
-                    sensorHandler.resetSphere();
+                    sensorHandler.lockBall();
+                    sensorHandler.resetBall();
                     break;
                 }
             }
@@ -278,11 +282,11 @@ public class CanvasActivity extends AppCompatActivity {
     private void detectWin() {
         if (!level.hasEndPosition())
             return;
-        Sphere.Point2D position = sensorHandler.getPosition();
-        if (Math.sqrt((Math.pow(level.getEndPosition().x - position.x, 2) + Math.pow(level.getEndPosition().y - position.y, 2))) < HOLE_RADIUS + CIRCLE_RADIUS) {
+        Ball.Point2D position = sensorHandler.getPosition();
+        if (Math.sqrt((Math.pow(level.getEndPosition().x - position.x, 2) + Math.pow(level.getEndPosition().y - position.y, 2))) < HOLE_RADIUS + BALL_RADIUS) {
             Toast.makeText(this, "VYHRAL JSI", Toast.LENGTH_SHORT).show();
-            sensorHandler.lockSphere();
-            sensorHandler.resetSphere();
+            sensorHandler.lockBall();
+            sensorHandler.resetBall();
         }
     }
 }

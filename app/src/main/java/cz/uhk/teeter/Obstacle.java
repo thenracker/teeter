@@ -2,6 +2,7 @@ package cz.uhk.teeter;
 
 import static cz.uhk.teeter.CanvasActivity.OBS_RADIUS;
 import static cz.uhk.teeter.SensorHandler.REFLECTION;
+import static cz.uhk.teeter.UnitsHelper.pixelsToMeters;
 
 public class Obstacle {
 
@@ -44,46 +45,45 @@ public class Obstacle {
 
         this.x2 = x2;
         this.y2 = y2;
-
     }
 
 
-    public void handleCollision(Sphere sphere) {
+    public void handleCollision(Ball ball, int density) {
 
-        Sphere.Point2D spherePosition = sphere.getPositionInPixels();
+        Ball.Point2D ballPosition = ball.getPositionInPixels();
 
         // kolize leva strana
-        if (sphere.getVelocityX() < 0 && //leti smerem doprava
-                spherePosition.x > x - sphere.radius
-                && spherePosition.x < x + sphere.radius
-                && spherePosition.y > y - sphere.radius
-                && spherePosition.y < y2 + sphere.radius) {
-            sphere.getPositionPoint().x = SensorHandler.pixelsToMeters(x - sphere.radius);
-            sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
+        if (ball.getVelocityX() < 0 && //leti smerem doprava
+                ballPosition.x > x - ball.radius
+                && ballPosition.x < x + ball.radius
+                && ballPosition.y > y - ball.radius
+                && ballPosition.y < y2 + ball.radius) {
+            ball.getPositionPoint().x = pixelsToMeters(x - ball.radius, density);
+            ball.setVelocityX(ball.getVelocityX() * (-REFLECTION));
         } //kolize prava strana
-        else if (sphere.getVelocityX() > 0//leti smerem doleva
-                && spherePosition.x < x2 + sphere.radius
-                && spherePosition.x > x2 - sphere.radius
-                && spherePosition.y > y - sphere.radius
-                && spherePosition.y < y2 + sphere.radius) {
-            sphere.getPositionPoint().x = SensorHandler.pixelsToMeters(x2 + sphere.radius);
-            sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
+        else if (ball.getVelocityX() > 0//leti smerem doleva
+                && ballPosition.x < x2 + ball.radius
+                && ballPosition.x > x2 - ball.radius
+                && ballPosition.y > y - ball.radius
+                && ballPosition.y < y2 + ball.radius) {
+            ball.getPositionPoint().x = pixelsToMeters(x2 + ball.radius, density);
+            ball.setVelocityX(ball.getVelocityX() * (-REFLECTION));
         } //kolize horni strana
-        else if (sphere.getVelocityY() > 0 //leti dolu
-                && spherePosition.x > x - sphere.radius
-                && spherePosition.x < x2 + sphere.radius
-                && spherePosition.y > y - sphere.radius
-                && spherePosition.y < y + sphere.radius) {
-            sphere.getPositionPoint().y = SensorHandler.pixelsToMeters(y - sphere.radius);
-            sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
+        else if (ball.getVelocityY() > 0 //leti dolu
+                && ballPosition.x > x - ball.radius
+                && ballPosition.x < x2 + ball.radius
+                && ballPosition.y > y - ball.radius
+                && ballPosition.y < y + ball.radius) {
+            ball.getPositionPoint().y = pixelsToMeters(y - ball.radius, density);
+            ball.setVelocityY(ball.getVelocityY() * (-REFLECTION));
         } // kolize spodni strana
-        else if (sphere.getVelocityY() < 0 //leti nahoru
-                && spherePosition.x > x - sphere.radius
-                && spherePosition.x < x2 + sphere.radius
-                && spherePosition.y < y2 + sphere.radius
-                && spherePosition.y > y2 - sphere.radius) {
-            sphere.getPositionPoint().y = SensorHandler.pixelsToMeters(y2 + sphere.radius);
-            sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
+        else if (ball.getVelocityY() < 0 //leti nahoru
+                && ballPosition.x > x - ball.radius
+                && ballPosition.x < x2 + ball.radius
+                && ballPosition.y < y2 + ball.radius
+                && ballPosition.y > y2 - ball.radius) {
+            ball.getPositionPoint().y = pixelsToMeters(y2 + ball.radius, density);
+            ball.setVelocityY(ball.getVelocityY() * (-REFLECTION));
         }
     }
 

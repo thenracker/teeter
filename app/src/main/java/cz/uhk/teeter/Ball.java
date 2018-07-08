@@ -1,6 +1,10 @@
 package cz.uhk.teeter;
 
-public class Sphere {
+import java.io.Serializable;
+
+import static cz.uhk.teeter.UnitsHelper.metersToPixels;
+
+public class Ball {
     public int radius;
     private float velocityX = 0f;
     private float velocityY = 0f;
@@ -42,11 +46,11 @@ public class Sphere {
         this.positionInPixels = positionInPixels;
     }
 
-    public void updatePositionInPixels() {
-        positionInPixels = new Point2D(SensorHandler.metersToPixels(positionPoint.x), SensorHandler.metersToPixels(positionPoint.y));
+    public void updatePositionInPixels(int density) {
+        positionInPixels = new Point2D(metersToPixels(positionPoint.x, density), metersToPixels(positionPoint.y, density));
     }
 
-    public static class Point2D {
+    public static class Point2D implements Serializable {
         public float x, y;
 
         public Point2D(float x, float y) {

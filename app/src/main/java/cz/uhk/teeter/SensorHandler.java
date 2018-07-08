@@ -12,6 +12,7 @@ import android.view.WindowManager;
 
 import static android.content.Context.SENSOR_SERVICE;
 import static android.content.Context.WINDOW_SERVICE;
+import static cz.uhk.teeter.UnitsHelper.pixelsToMeters;
 
 public class SensorHandler implements SensorEventListener {
 
@@ -27,14 +28,12 @@ public class SensorHandler implements SensorEventListener {
 
     private final float GRAVITY = 9.8f;
     private float FRICTION = 0.95f;
-    private float SLOWDOWN_INDEX = 0.50f; //hodnota 0,5 zajistí pomalejší nelineární rozjezd a také pomalejší útlum <3
     public static final float REFLECTION = 0.99f;
     private final float NOISE = 0.35f;
 
-    private Sphere sphere;
+    private Ball ball;
     private Level level;
-    private boolean sphereLocked = true;
-    private boolean started = false;
+    private boolean ballLocked = true;
 
     @Override
     public void onSensorChanged(SensorEvent event) {
@@ -42,7 +41,7 @@ public class SensorHandler implements SensorEventListener {
         // with t, the low-pass filter's time-constant
         // and dT, the event delivery rate
 
-        if (sphereLocked) {
+        if (ballLocked) {
             lastMillis = System.currentTimeMillis();
             return;
         }
@@ -51,14 +50,16 @@ public class SensorHandler implements SensorEventListener {
 
         float[] clearValues = new float[]{clear(event.values[0]), clear(event.values[1]), clear(event.values[2])};
 
+        //low pass filter
+        //chceme jen urcitou cast novych hodnot a zachovavat stare
         gravity[0] = alpha * gravity[0] + (1 - alpha) * clearValues[0];
         gravity[1] = alpha * gravity[1] + (1 - alpha) * clearValues[1];
         gravity[2] = alpha * gravity[2] + (1 - alpha) * clearValues[2];
 
         //třeba se lineární akcelerace bude hodit
-        linearAcceleration[0] = clearValues[0] - gravity[0];
-        linearAcceleration[1] = clearValues[1] - gravity[1];
-        linearAcceleration[2] = clearValues[2] - gravity[2];
+//        linearAcceleration[0] = clearValues[0] - gravity[0];
+//        linearAcceleration[1] = clearValues[1] - gravity[1];
+//        linearAcceleration[2] = clearValues[2] - gravity[2];
 
         //System.out.println(String.format("%s %s %s : %s %s %s", gravity[0], gravity[1], gravity[2], linearAcceleration[0], linearAcceleration[1], linearAcceleration[2]));
 
@@ -71,8 +72,6 @@ public class SensorHandler implements SensorEventListener {
         //System.out.println(String.format("%s %s %s : %s %s %s", gravity[0], gravity[1], gravity[2], linearAcceleration[0], linearAcceleration[1], linearAcceleration[2]));
 
         float deltaTime = (float) (nowMillis - lastMillis) / 1000f;
-
-        //              zpomalování třením
 
         // v = a*t
         float newVelocityX = (gravity[0] * deltaTime);// * SLOWDOWN_INDEX;
@@ -103,79 +102,77 @@ public class SensorHandler implements SensorEventListener {
         }
 
         // v = v0 + a*t
+        float velX = (ball.getVelocityX() * nowFriction) + (xValue);
+        float velY = (ball.getVelocityY() * nowFriction) + (yValue);
 
-
-        float velX = (sphere.getVelocityX() * nowFriction) + (xValue);
-        float velY = (sphere.getVelocityY() * nowFriction) + (yValue);
-
-        sphere.setVelocityX((alpha * sphere.getVelocityX()) + (1 - alpha) * velX);
-        sphere.setVelocityY((alpha * sphere.getVelocityY()) + (1 - alpha) * velY);
-
-        //TODO - detekci hodu s telefonem - aby to nerozhodilo kuličku
+        //opet chceme jen cast novych hodnot, aby zmeny smeru pohybu byly postupne
+        ball.setVelocityX((alpha * ball.getVelocityX()) + (1 - alpha) * velX);
+        ball.setVelocityY((alpha * ball.getVelocityY()) + (1 - alpha) * velY);
 
         lastMillis = nowMillis;
 
-        Sphere.Point2D spherePosition = sphere.getPositionPoint();
-        if (spherePosition.x >= pixelsToMeters(sphere.radius) && spherePosition.x <= (width)) {
-            spherePosition.x -= (sphere.getVelocityX() * deltaTime);
+        Ball.Point2D ballPosition = ball.getPositionPoint();
+        if (ballPosition.x >= pixelsToMeters(ball.radius, density) && ballPosition.x <= (width)) {
+            ballPosition.x -= (ball.getVelocityX() * deltaTime);
         }
-        if (spherePosition.y >= pixelsToMeters(sphere.radius) && spherePosition.y <= (height)) {
-            spherePosition.y += (sphere.getVelocityY() * deltaTime);
+        if (ballPosition.y >= pixelsToMeters(ball.radius, density) && ballPosition.y <= (height)) {
+            ballPosition.y += (ball.getVelocityY() * deltaTime);
         }
         //border světa - detekce kolize
         //leva
-        if (spherePosition.x < pixelsToMeters(sphere.radius)) {
-            spherePosition.x = pixelsToMeters(sphere.radius);
-            sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
+        if (ballPosition.x < pixelsToMeters(ball.radius, density)) {
+            ballPosition.x = pixelsToMeters(ball.radius, density);
+            ball.setVelocityX(ball.getVelocityX() * (-REFLECTION));
         }//prava
-        else if (spherePosition.x > (width)) {
-            spherePosition.x = (width);
-            sphere.setVelocityX(sphere.getVelocityX() * (-REFLECTION));
+        else if (ballPosition.x > (width)) {
+            ballPosition.x = (width);
+            ball.setVelocityX(ball.getVelocityX() * (-REFLECTION));
         }//horni
-        if (spherePosition.y < pixelsToMeters(sphere.radius)) {
-            spherePosition.y = pixelsToMeters(sphere.radius);
-            sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
+        if (ballPosition.y < pixelsToMeters(ball.radius, density)) {
+            ballPosition.y = pixelsToMeters(ball.radius, density);
+            ball.setVelocityY(ball.getVelocityY() * (-REFLECTION));
         }//dolni
-        else if (spherePosition.y > (height)) {
-            spherePosition.y = (height);
-            sphere.setVelocityY(sphere.getVelocityY() * (-REFLECTION));
+        else if (ballPosition.y > (height)) {
+            ballPosition.y = (height);
+            ball.setVelocityY(ball.getVelocityY() * (-REFLECTION));
         }
 
-        sphere.setPositionPoint(spherePosition);
+        ball.setPositionPoint(ballPosition);
 
         for (Obstacle obstacle : level.getObstacles()) {
-            obstacle.handleCollision(sphere);
+            obstacle.handleCollision(ball, density);
         }
 
-        sphere.updatePositionInPixels();
+        ball.updatePositionInPixels(density);
 
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-
+        //ignore
     }
 
-    public void init(Context context, SurfaceView surfaceView, Level level) {
+    public void init(Context context, SurfaceView surfaceView, Level level, float ballRadius) {
         Display display = ((WindowManager) context.getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
         orientation = display.getRotation();
         density = context.getResources().getDisplayMetrics().densityDpi;
 
-        if (sphere == null) {
-            sphere = new Sphere();
-            sphere.radius = 20;
-            width = surfaceView.getWidth() - sphere.radius;
-            height = surfaceView.getHeight() - sphere.radius;
-            width = pixelsToMeters((int) width);
-            height = pixelsToMeters((int) height);
+        if (ball == null) {
+            ball = new Ball();
+            ball.radius = (int) ballRadius;
+            width = surfaceView.getWidth() - ball.radius;
+            height = surfaceView.getHeight() - ball.radius;
+            width = pixelsToMeters((int) width, density);
+            height = pixelsToMeters((int) height, density);
             if (level.hasStartingPosition()) {
-                sphere.setPositionPoint(level.getStartingPosition());
+                ball.setPositionInPixels(level.getStartingPosition());
+                ball.setPositionPoint(new Ball.Point2D(pixelsToMeters((int) level.getStartingPosition().x, density), pixelsToMeters((int) level.getStartingPosition().y, density)));
             } else {
-                sphere.setPositionPoint(new Sphere.Point2D(width / 2, height / 2));
+                ball.setPositionPoint(new Ball.Point2D(width / 2, height / 2));
+                ball.updatePositionInPixels(density);
             }
-            sphere.setPositionInPixels(new Sphere.Point2D(metersToPixels(width / 2), metersToPixels(height / 2)));
-
         }
+
         this.level = level;
         SensorManager sensorManager = (SensorManager) context.getSystemService(SENSOR_SERVICE);
         sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_FASTEST);
@@ -186,41 +183,28 @@ public class SensorHandler implements SensorEventListener {
         sensorManager.unregisterListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER));
     }
 
-    public Sphere.Point2D getPosition() {
-        return sphere.getPositionInPixels();
+    public Ball.Point2D getPosition() {
+        return ball.getPositionInPixels();
     }
 
     private float clear(float f) {
         return (f < NOISE && f > -NOISE) ? 0 : f;
     }
 
-    public static float pixelsToMeters(int pixelsCount) {
-        return ((float) pixelsCount / (float) density / 39f); //39 - to jest převod z palců na metr .. protože density je v PPI - pixels per inch
+    public void lockBall() {
+        ballLocked = !ballLocked;
     }
 
-    public static int metersToPixels(float metersCount) {
-        return (int) (metersCount * 39f * (float) density);
+    public boolean isBallLocked() {
+        return ballLocked;
     }
 
-    public void lockSphere() {
-        if (!started) {
-            resetSphere();
-        } else {
-            sphereLocked = !sphereLocked;
-        }
-    }
-
-    public boolean isSphereLocked() {
-        return sphereLocked;
-    }
-
-    public void resetSphere() {
-        started = true;
+    public void resetBall() {
         if (level.hasStartingPosition()) {
-            sphere.setPositionInPixels(level.getStartingPosition());
-            sphere.setPositionPoint(new Sphere.Point2D(pixelsToMeters((int) level.getStartingPosition().x), pixelsToMeters((int) level.getStartingPosition().y)));
-            sphere.setVelocityX(0);
-            sphere.setVelocityY(0);
+            ball.setPositionInPixels(level.getStartingPosition());
+            ball.setPositionPoint(new Ball.Point2D(pixelsToMeters((int) level.getStartingPosition().x, density), pixelsToMeters((int) level.getStartingPosition().y, density)));
+            ball.setVelocityX(0);
+            ball.setVelocityY(0);
         }
     }
 }
