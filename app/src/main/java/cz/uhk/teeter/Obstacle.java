@@ -6,12 +6,23 @@ public class Obstacle {
 
     private int x, y, x2, y2;
 
-    public Obstacle(int x, int y, int width, int height) {
-        this.x2 = width;
-        this.y2 = height;
-
+    public Obstacle(int x, int y, int x2, int y2) {
+        if (x > x2){
+            int pom = x;
+            x = x2;
+            x2 = pom;
+        }
+        if (y > y2){
+            int pom = y;
+            y = y2;
+            y2 = pom;
+        }
         this.x = x;
         this.y = y;
+
+        this.x2 = x2;
+        this.y2 = y2;
+
     }
 
 
