@@ -194,8 +194,7 @@ public class CanvasActivity extends AppCompatActivity {
         if (position != null) {
             for (Hole hole : level.getHoles()) {
                 //c2 = a2 + b2 - pokud je c kratší než radius kuličky, pak díra
-                //TODO -
-                if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < HOLE_RADIUS) {
+                if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < HOLE_RADIUS + CIRCLE_RADIUS) {
                     Toast.makeText(this, "PROHRÁL JSI", Toast.LENGTH_SHORT).show();
                     sensorHandler.lockSphere();
                     sensorHandler.resetSphere();
@@ -210,7 +209,7 @@ public class CanvasActivity extends AppCompatActivity {
         if (!level.hasEndPosition())
             return;
         Sphere.Point2D position = sensorHandler.getPosition();
-        if (Math.sqrt((Math.pow(level.getEndPosition().x - position.x, 2) + Math.pow(level.getEndPosition().y - position.y, 2))) < HOLE_RADIUS) {
+        if (Math.sqrt((Math.pow(level.getEndPosition().x - position.x, 2) + Math.pow(level.getEndPosition().y - position.y, 2))) < HOLE_RADIUS + CIRCLE_RADIUS) {
             Toast.makeText(this, "VYHRAL JSI", Toast.LENGTH_SHORT).show();
         }
     }
