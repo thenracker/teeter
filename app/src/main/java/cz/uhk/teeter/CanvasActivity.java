@@ -96,14 +96,6 @@ public class CanvasActivity extends AppCompatActivity {
         });
         drawerLayout.openDrawer(Gravity.LEFT);
 
-        navigationView.getMenu().findItem(R.id.nav_level_1).setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener() {
-            @Override
-            public boolean onMenuItemClick(MenuItem menuItem) {
-                return false;
-            }
-        });
-
-
         handler = new Handler();
         sensorHandler = new SensorHandler();
         paintBall = new Paint();
