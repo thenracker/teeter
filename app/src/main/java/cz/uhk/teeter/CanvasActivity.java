@@ -66,12 +66,7 @@ public class CanvasActivity extends AppCompatActivity {
         drawerLayout = findViewById(R.id.drawer_layout);
         drawerLayout.setScrimColor(Color.TRANSPARENT);
         navigationView = findViewById(R.id.nav_view);
-//        navigationView.getHeaderView(0).findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                sensorHandler.lockBall();
-//            }
-//        });
+
         navigationView.setNavigationItemSelectedListener(new NavigationView.OnNavigationItemSelectedListener() {
             @Override
             public boolean onNavigationItemSelected(@NonNull MenuItem item) {
@@ -79,7 +74,6 @@ public class CanvasActivity extends AppCompatActivity {
                     loadLevel(1);
                 }
                 if (item.getItemId() == R.id.nav_level_2) {
-                    //Level.Loader.saveToJson(level);
                     loadLevel(2);
                 }
                 if (item.getItemId() == R.id.nav_level_3) {
@@ -261,7 +255,7 @@ public class CanvasActivity extends AppCompatActivity {
             for (Hole hole : level.getHoles()) {
                 //c2 = a2 + b2 - pokud je c kratší než radius kuličky, pak díra
                 if (Math.sqrt((Math.pow(hole.getPositionInMeters().x - position.x, 2) + Math.pow(hole.getPositionInMeters().y - position.y, 2))) < HOLE_RADIUS + BALL_RADIUS) {
-                    Toast.makeText(this, "PROHRÁL JSI", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "YOU FAILED", Toast.LENGTH_SHORT).show();
                     sensorHandler.lockBall();
                     sensorHandler.resetBall();
                     break;
@@ -276,7 +270,7 @@ public class CanvasActivity extends AppCompatActivity {
             return;
         Ball.Point2D position = sensorHandler.getPosition();
         if (Math.sqrt((Math.pow(level.getEndPosition().x - position.x, 2) + Math.pow(level.getEndPosition().y - position.y, 2))) < HOLE_RADIUS + BALL_RADIUS) {
-            Toast.makeText(this, "VYHRAL JSI", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, "YOU WON", Toast.LENGTH_SHORT).show();
             sensorHandler.lockBall();
             sensorHandler.resetBall();
         }
